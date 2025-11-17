@@ -10,12 +10,18 @@ import (
 )
 
 // DemoUser represents a user in our demo system
+// Supports both new simplified format (IsAutoJoinAdmin) and legacy format (Role, Groups)
 type DemoUser struct {
 	ID       string      `json:"id"`
 	Email    string      `json:"email"`
 	Password string      `json:"-"` // Never include password in JSON
-	Role     string      `json:"role"`
-	Groups   []UserGroup `json:"groups"`
+
+	// New simplified field (preferred)
+	IsAutoJoinAdmin bool `json:"isAutoJoinAdmin"`
+
+	// Legacy fields (deprecated but still supported for backward compatibility)
+	Role   string      `json:"role"`
+	Groups []UserGroup `json:"groups"`
 }
 
 // UserGroup represents a group membership
@@ -39,23 +45,27 @@ type LoginResponse struct {
 }
 
 // Demo users database (in a real app, this would be in a database)
+// Demo users with new simplified format (IsAutoJoinAdmin)
+// Legacy fields (Role, Groups) are also included for backward compatibility demo
 var demoUsers = []DemoUser{
 	{
-		ID:       "user-1",
-		Email:    "admin@example.com",
-		Password: hashPassword("password123"), // hashed 'password123'
-		Role:     "admin",
-		Groups: []UserGroup{
+		ID:              "user-1",
+		Email:           "admin@example.com",
+		Password:        hashPassword("password123"), // hashed 'password123'
+		IsAutoJoinAdmin: true,                        // New simplified field
+		Role:            "admin",                     // Legacy field
+		Groups: []UserGroup{ // Legacy field
 			{Type: "team", ID: "team-1", Name: "Engineering"},
 			{Type: "organization", ID: "org-1", Name: "Acme Corp"},
 		},
 	},
 	{
-		ID:       "user-2",
-		Email:    "user@example.com",
-		Password: hashPassword("userpass"), // hashed 'userpass'
-		Role:     "user",
-		Groups: []UserGroup{
+		ID:              "user-2",
+		Email:           "user@example.com",
+		Password:        hashPassword("userpass"), // hashed 'userpass'
+		IsAutoJoinAdmin: false,                    // New simplified field
+		Role:            "user",                   // Legacy field
+		Groups: []UserGroup{ // Legacy field
 			{Type: "team", ID: "team-1", Name: "Engineering"},
 		},
 	},
@@ -77,12 +87,13 @@ func verifyPassword(password, hash string) bool {
 // Create a session JWT for the demo
 func createSessionJWT(user DemoUser) (string, error) {
 	claims := jwt.MapClaims{
-		"userId": user.ID,
-		"email":  user.Email,
-		"role":   user.Role,
-		"groups": user.Groups,
-		"exp":    time.Now().Add(24 * time.Hour).Unix(),
-		"iat":    time.Now().Unix(),
+		"userId":          user.ID,
+		"email":           user.Email,
+		"isAutoJoinAdmin": user.IsAutoJoinAdmin,
+		"role":            user.Role,
+		"groups":          user.Groups,
+		"exp":             time.Now().Add(24 * time.Hour).Unix(),
+		"iat":             time.Now().Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -119,11 +130,20 @@ func verifySessionJWT(tokenString string) (*DemoUser, error) {
 			}
 		}
 
+		// Get isAutoJoinAdmin with default false
+		isAutoJoinAdmin := false
+		if isAutoJoinAdminInterface, exists := claims["isAutoJoinAdmin"]; exists {
+			if val, ok := isAutoJoinAdminInterface.(bool); ok {
+				isAutoJoinAdmin = val
+			}
+		}
+
 		return &DemoUser{
-			ID:     claims["userId"].(string),
-			Email:  claims["email"].(string),
-			Role:   claims["role"].(string),
-			Groups: groups,
+			ID:              claims["userId"].(string),
+			Email:           claims["email"].(string),
+			IsAutoJoinAdmin: isAutoJoinAdmin,
+			Role:            claims["role"].(string),
+			Groups:          groups,
 		}, nil
 	}
 
@@ -135,10 +155,11 @@ func authenticateUser(email, password string) *DemoUser {
 	for _, user := range demoUsers {
 		if user.Email == email && verifyPassword(password, user.Password) {
 			return &DemoUser{
-				ID:     user.ID,
-				Email:  user.Email,
-				Role:   user.Role,
-				Groups: user.Groups,
+				ID:              user.ID,
+				Email:           user.Email,
+				IsAutoJoinAdmin: user.IsAutoJoinAdmin,
+				Role:            user.Role,
+				Groups:          user.Groups,
 			}
 		}
 	}
@@ -181,10 +202,11 @@ func getDemoUsers() []DemoUser {
 	var users []DemoUser
 	for _, user := range demoUsers {
 		users = append(users, DemoUser{
-			ID:     user.ID,
-			Email:  user.Email,
-			Role:   user.Role,
-			Groups: user.Groups,
+			ID:              user.ID,
+			Email:           user.Email,
+			IsAutoJoinAdmin: user.IsAutoJoinAdmin,
+			Role:            user.Role,
+			Groups:          user.Groups,
 		})
 	}
 	return users

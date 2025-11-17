@@ -139,30 +139,17 @@ func generateJWTHandler(c *gin.Context) {
 		return
 	}
 
-	// Convert user to Vortex JWT payload format
-	var identifiers []vortex.Identifier
-	identifiers = append(identifiers, vortex.Identifier{
-		Type:  "email",
-		Value: user.Email,
-	})
-
-	var groups []vortex.Group
-	for _, g := range user.Groups {
-		groups = append(groups, vortex.Group{
-			Type: g.Type,
-			ID:   g.ID,
-			Name: g.Name,
-		})
+	// Build user with admin scopes
+	vortexUser := &vortex.User{
+		ID:    user.ID,
+		Email: user.Email,
 	}
 
-	payload := vortex.JWTPayload{
-		UserID:      user.ID,
-		Identifiers: identifiers,
-		Groups:      groups,
-		Role:        &user.Role,
+	if user.IsAutoJoinAdmin {
+		vortexUser.AdminScopes = []string{"autoJoin"}
 	}
 
-	jwt, err := vortexClient.GenerateJWT(payload)
+	jwt, err := vortexClient.GenerateJWT(vortexUser, nil)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to generate JWT"})
 		return

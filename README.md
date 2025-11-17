@@ -49,10 +49,50 @@ A demo application showcasing the Vortex Go SDK integration with a Gin web serve
 
 ## Demo Users
 
-The demo includes two test users:
+The demo includes two test users using the **new simplified JWT format**:
 
-- **Admin User**: `admin@example.com` / `password123` (admin role)
-- **Regular User**: `user@example.com` / `userpass` (user role)
+| Email | Password | Auto-Join Admin | Legacy Role |
+|-------|----------|-----------------|-------------|
+| admin@example.com | password123 | Yes | admin |
+| user@example.com | userpass | No | user |
+
+The demo showcases both the new simplified format (`IsAutoJoinAdmin`) and the legacy format (`Role` + `Groups`) for educational purposes. See [server.go](src/server.go) for implementation details.
+
+## JWT Format
+
+This demo uses Vortex's **new JWT format with User struct**:
+
+```go
+// Create a User with admin scopes
+vortexUser := &vortex.User{
+    ID:    user.ID,
+    Email: user.Email,
+}
+
+if user.IsAutoJoinAdmin {
+    vortexUser.AdminScopes = []string{"autoJoin"}
+}
+
+// Generate JWT
+jwt, err := vortexClient.GenerateJWT(vortexUser, nil)
+
+// Or with extra properties
+extra := map[string]interface{}{
+    "role":       "admin",
+    "department": "Engineering",
+}
+jwt, err := vortexClient.GenerateJWT(vortexUser, extra)
+```
+
+The JWT payload includes:
+- `userId`: User's unique ID
+- `userEmail`: User's email address
+- `userIsAutoJoinAdmin`: Set to `true` when `AdminScopes` contains `"autoJoin"`
+- Any additional properties from the extra parameter
+
+This replaces the legacy format with identifiers, groups, and role fields.
+
+The demo implementation can be found in server.go lines 143-152.
 
 ## API Endpoints
 
