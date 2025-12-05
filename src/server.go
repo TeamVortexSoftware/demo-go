@@ -145,8 +145,8 @@ func generateJWTHandler(c *gin.Context) {
 		Email: user.Email,
 	}
 
-	if user.IsAutoJoinAdmin {
-		vortexUser.AdminScopes = []string{"autoJoin"}
+	if user.IsAutojoinAdmin {
+		vortexUser.AdminScopes = []string{"autojoin"}
 	}
 
 	jwt, err := vortexClient.GenerateJWT(vortexUser, nil)

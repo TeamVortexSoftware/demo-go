@@ -19,6 +19,7 @@ A demo application showcasing the Vortex Go SDK integration with a Gin web serve
 ## Installation
 
 1. Navigate to the demo directory:
+
    ```bash
    cd apps/demo-go
    ```
@@ -31,16 +32,19 @@ A demo application showcasing the Vortex Go SDK integration with a Gin web serve
 ## Running the Demo
 
 1. Set your Vortex API key (optional - defaults to demo key):
+
    ```bash
    export VORTEX_API_KEY=your-api-key-here
    ```
 
 2. Set the port (optional - defaults to 3000):
+
    ```bash
    export PORT=3000
    ```
 
 3. Run the server:
+
    ```bash
    go run src/server.go src/auth.go
    ```
@@ -51,12 +55,12 @@ A demo application showcasing the Vortex Go SDK integration with a Gin web serve
 
 The demo includes two test users using the **new simplified JWT format**:
 
-| Email | Password | Auto-Join Admin | Legacy Role |
-|-------|----------|-----------------|-------------|
-| admin@example.com | password123 | Yes | admin |
-| user@example.com | userpass | No | user |
+| Email             | Password    | Autojoin Admin | Legacy Role |
+| ----------------- | ----------- | --------------- | ----------- |
+| admin@example.com | password123 | Yes             | admin       |
+| user@example.com  | userpass    | No              | user        |
 
-The demo showcases both the new simplified format (`IsAutoJoinAdmin`) and the legacy format (`Role` + `Groups`) for educational purposes. See [server.go](src/server.go) for implementation details.
+The demo showcases both the new simplified format (`IsAutojoinAdmin`) and the legacy format (`Role` + `Groups`) for educational purposes. See [server.go](src/server.go) for implementation details.
 
 ## JWT Format
 
@@ -69,8 +73,8 @@ vortexUser := &vortex.User{
     Email: user.Email,
 }
 
-if user.IsAutoJoinAdmin {
-    vortexUser.AdminScopes = []string{"autoJoin"}
+if user.IsAutojoinAdmin {
+    vortexUser.AdminScopes = []string{"autojoin"}
 }
 
 // Generate JWT
@@ -85,9 +89,10 @@ jwt, err := vortexClient.GenerateJWT(vortexUser, extra)
 ```
 
 The JWT payload includes:
+
 - `userId`: User's unique ID
 - `userEmail`: User's email address
-- `userIsAutoJoinAdmin`: Set to `true` when `AdminScopes` contains `"autoJoin"`
+- `userIsAutojoinAdmin`: Set to `true` when `AdminScopes` contains `"autojoin"`
 - Any additional properties from the extra parameter
 
 This replaces the legacy format with identifiers, groups, and role fields.
@@ -97,15 +102,18 @@ The demo implementation can be found in server.go lines 143-152.
 ## API Endpoints
 
 ### Authentication Routes
+
 - `POST /api/auth/login` - Login with email/password
 - `POST /api/auth/logout` - Logout (clears session cookie)
 - `GET /api/auth/me` - Get current user info
 
 ### Demo Routes
+
 - `GET /api/demo/users` - Get all demo users
 - `GET /api/demo/protected` - Protected route (requires auth)
 
 ### Vortex API Routes
+
 All Vortex routes require authentication:
 
 - `POST /api/vortex/jwt` - Generate Vortex JWT
@@ -118,6 +126,7 @@ All Vortex routes require authentication:
 - `POST /api/vortex/invitations/:id/reinvite` - Reinvite user
 
 ### Health Check
+
 - `GET /health` - Server health status
 
 ## Configuration

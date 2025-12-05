@@ -10,14 +10,14 @@ import (
 )
 
 // DemoUser represents a user in our demo system
-// Supports both new simplified format (IsAutoJoinAdmin) and legacy format (Role, Groups)
+// Supports both new simplified format (IsAutojoinAdmin) and legacy format (Role, Groups)
 type DemoUser struct {
 	ID       string      `json:"id"`
 	Email    string      `json:"email"`
 	Password string      `json:"-"` // Never include password in JSON
 
 	// New simplified field (preferred)
-	IsAutoJoinAdmin bool `json:"isAutoJoinAdmin"`
+	IsAutojoinAdmin bool `json:"isAutojoinAdmin"`
 
 	// Legacy fields (deprecated but still supported for backward compatibility)
 	Role   string      `json:"role"`
@@ -45,14 +45,14 @@ type LoginResponse struct {
 }
 
 // Demo users database (in a real app, this would be in a database)
-// Demo users with new simplified format (IsAutoJoinAdmin)
+// Demo users with new simplified format (IsAutojoinAdmin)
 // Legacy fields (Role, Groups) are also included for backward compatibility demo
 var demoUsers = []DemoUser{
 	{
 		ID:              "user-1",
 		Email:           "admin@example.com",
 		Password:        hashPassword("password123"), // hashed 'password123'
-		IsAutoJoinAdmin: true,                        // New simplified field
+		IsAutojoinAdmin: true,                        // New simplified field
 		Role:            "admin",                     // Legacy field
 		Groups: []UserGroup{ // Legacy field
 			{Type: "team", ID: "team-1", Name: "Engineering"},
@@ -63,7 +63,7 @@ var demoUsers = []DemoUser{
 		ID:              "user-2",
 		Email:           "user@example.com",
 		Password:        hashPassword("userpass"), // hashed 'userpass'
-		IsAutoJoinAdmin: false,                    // New simplified field
+		IsAutojoinAdmin: false,                    // New simplified field
 		Role:            "user",                   // Legacy field
 		Groups: []UserGroup{ // Legacy field
 			{Type: "team", ID: "team-1", Name: "Engineering"},
@@ -89,7 +89,7 @@ func createSessionJWT(user DemoUser) (string, error) {
 	claims := jwt.MapClaims{
 		"userId":          user.ID,
 		"email":           user.Email,
-		"isAutoJoinAdmin": user.IsAutoJoinAdmin,
+		"isAutojoinAdmin": user.IsAutojoinAdmin,
 		"role":            user.Role,
 		"groups":          user.Groups,
 		"exp":             time.Now().Add(24 * time.Hour).Unix(),
@@ -130,18 +130,18 @@ func verifySessionJWT(tokenString string) (*DemoUser, error) {
 			}
 		}
 
-		// Get isAutoJoinAdmin with default false
-		isAutoJoinAdmin := false
-		if isAutoJoinAdminInterface, exists := claims["isAutoJoinAdmin"]; exists {
-			if val, ok := isAutoJoinAdminInterface.(bool); ok {
-				isAutoJoinAdmin = val
+		// Get isAutojoinAdmin with default false
+		isAutojoinAdmin := false
+		if isAutojoinAdminInterface, exists := claims["isAutojoinAdmin"]; exists {
+			if val, ok := isAutojoinAdminInterface.(bool); ok {
+				isAutojoinAdmin = val
 			}
 		}
 
 		return &DemoUser{
 			ID:              claims["userId"].(string),
 			Email:           claims["email"].(string),
-			IsAutoJoinAdmin: isAutoJoinAdmin,
+			IsAutojoinAdmin: isAutojoinAdmin,
 			Role:            claims["role"].(string),
 			Groups:          groups,
 		}, nil
@@ -157,7 +157,7 @@ func authenticateUser(email, password string) *DemoUser {
 			return &DemoUser{
 				ID:              user.ID,
 				Email:           user.Email,
-				IsAutoJoinAdmin: user.IsAutoJoinAdmin,
+				IsAutojoinAdmin: user.IsAutojoinAdmin,
 				Role:            user.Role,
 				Groups:          user.Groups,
 			}
@@ -204,7 +204,7 @@ func getDemoUsers() []DemoUser {
 		users = append(users, DemoUser{
 			ID:              user.ID,
 			Email:           user.Email,
-			IsAutoJoinAdmin: user.IsAutoJoinAdmin,
+			IsAutojoinAdmin: user.IsAutojoinAdmin,
 			Role:            user.Role,
 			Groups:          user.Groups,
 		})
